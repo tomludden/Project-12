@@ -24,7 +24,7 @@ A simple fun game where users guess the correct breed of a dog from three random
 
 # Installation
 
-git clone https://github.com/tomludden/Project-11
+git clone https://github.com/tomludden/Project-12
 npm install
 npm run dev
 
