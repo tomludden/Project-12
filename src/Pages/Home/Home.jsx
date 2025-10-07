@@ -7,7 +7,7 @@ const Home = () => {
       <h1>Welcome Dog Lovers!</h1>
       <img
         className='home-img'
-        src='/assets/home-dog-image.jpg' // assuming public/assets is correct
+        src='/assets/home-dog-image.jpg'
         alt='Cute Dog'
       />
     </div>

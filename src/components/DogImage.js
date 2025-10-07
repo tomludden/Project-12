@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 
-export function useDogImage() {
+export function DogImage() {
   const [dogImage, setDogImage] = useState('')
 
   const fetchDogImage = useCallback(async () => {

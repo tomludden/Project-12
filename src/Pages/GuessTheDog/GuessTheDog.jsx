@@ -1,101 +1,124 @@
-import React, { useEffect, useReducer } from 'react'
+import React, { useEffect, useReducer, useCallback, useMemo } from 'react'
 import './GuessTheDog.css'
-import { useDogImages } from '/src/Hooks/useDogImages.js'
-import { useGameTimer } from '/src/Hooks/useGameTimer.js'
+import { DogImages } from '../../components/DogImages.js'
+import { GameTimer } from '../../components/GameTimer.js'
+import { gameReducer, initialState } from '../../Reducers/gameReducer.jsx'
 
-const initialState = {
-  dogImages: [],
-  correctBreed: '',
-  score: 0,
-  lives: 5,
-  gameOver: false,
-  timer: 5,
-  started: false
-}
+const STORAGE_KEY = 'guessTheDogProgress'
 
-const gameReducer = (state, action) => {
-  switch (action.type) {
-    case 'START_GAME':
-      return { ...state, started: true }
-    case 'SET_DOGS':
-      return {
-        ...state,
-        dogImages: action.payload.images,
-        correctBreed: action.payload.correctBreed,
-        timer: 5
-      }
-    case 'GUESS_CORRECT':
-      return { ...state, score: state.score + 1, timer: 5 }
-    case 'GUESS_WRONG':
-      const newLives = state.lives - 1
-      return {
-        ...state,
-        lives: newLives,
-        gameOver: newLives <= 0,
-        timer: 5
-      }
-    case 'TICK':
-      return { ...state, timer: state.timer - 1 }
-    case 'RESET_GAME':
-      return { ...initialState, started: true }
-    default:
-      return state
-  }
-}
-
-const Game = () => {
+const GuessTheDog = () => {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { dogImages, correctBreed, score, lives, gameOver, timer, started } =
     state
 
-  const fetchDogs = useDogImages(dispatch)
-  useGameTimer({ started, gameOver, timer, dispatch, fetchDogs })
+  const fetchDogs = DogImages(dispatch)
+  GameTimer({ started, gameOver, timer, dispatch, fetchDogs })
 
   useEffect(() => {
-    if (started && !gameOver) {
-      fetchDogs()
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        dispatch({ type: 'LOAD_STATE', payload: parsed })
+      } catch {
+        localStorage.removeItem(STORAGE_KEY)
+      }
     }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  }, [state])
+
+  useEffect(() => {
+    if (started && !gameOver) fetchDogs()
   }, [started, gameOver, fetchDogs])
 
-  const handleGuess = (imgUrl) => {
-    if (gameOver) return
-    const breed =
-      imgUrl.match(/breeds\/([^/]+)\//)?.[1]?.replace('-', ' ') ?? ''
-    if (breed === correctBreed) {
-      dispatch({ type: 'GUESS_CORRECT' })
-      fetchDogs()
-    } else {
-      dispatch({ type: 'GUESS_WRONG' })
-      if (lives > 1) fetchDogs()
-    }
-  }
+  const handleGuess = useCallback(
+    (imgUrl) => {
+      if (gameOver) return
+      const breed =
+        imgUrl.match(/breeds\/([^/]+)\//)?.[1]?.replace('-', ' ') ?? ''
+      if (breed === correctBreed) {
+        dispatch({ type: 'GUESS_CORRECT' })
+        fetchDogs()
+      } else {
+        dispatch({ type: 'GUESS_WRONG' })
+        if (lives > 1) fetchDogs()
+      }
+    },
+    [gameOver, correctBreed, lives, fetchDogs]
+  )
 
-  const startGame = () => dispatch({ type: 'START_GAME' })
-  const restartGame = () => dispatch({ type: 'RESET_GAME' })
+  const startGame = useCallback(() => dispatch({ type: 'START_GAME' }), [])
+  const restartGame = useCallback(() => {
+    dispatch({ type: 'RESET_GAME' })
+    localStorage.removeItem(STORAGE_KEY)
+  }, [])
+
+  const ScoreLives = useMemo(
+    () => (
+      <div className='score-lives'>
+        <p className='score'>
+          Score: <span className='score-num'>{score}</span>
+        </p>
+        <p className='lives'>
+          <span className='heart'>♡</span> <span className='live'>Lives: </span>{' '}
+          {lives}
+        </p>
+      </div>
+    ),
+    [score, lives]
+  )
+
+  const TimerDisplay = useMemo(
+    () =>
+      !gameOver && (
+        <p className='timer'>
+          ⏳ <span className='time'>Time left: </span>
+          {timer}s
+        </p>
+      ),
+    [gameOver, timer]
+  )
+
+  const DogGrid = useMemo(
+    () => (
+      <div className='dog-grid'>
+        {dogImages.map((img, idx) => (
+          <img
+            key={idx}
+            src={img}
+            alt='dog'
+            className='dog-image'
+            onClick={() => handleGuess(img)}
+          />
+        ))}
+      </div>
+    ),
+    [dogImages, handleGuess]
+  )
 
   return (
     <div className='game'>
       <h1>Guess the Dog Breed</h1>
-      {!started ? (
-        <button className='start-btn' onClick={startGame}>
-          Start Game
-        </button>
-      ) : (
-        <>
-          <p className='score'>
-            Score: <span className='score-num'>{score}</span>
-          </p>
-          <p className='lives'>
-            <span className='heart'>♡</span>{' '}
-            <span className='live'>Lives: </span> {lives}
-          </p>
-          {!gameOver && (
-            <p className='timer'>
-              ⏳ <span className='time'>Time left: </span>
-              {timer}s
-            </p>
-          )}
 
+      {!started && (
+        <>
+          <p className='game-text'>
+            Take the challenge and see how many you can get correct, be careful
+            there is a time limit....Good Luck!!
+          </p>
+          <button className='start-btn' onClick={startGame}>
+            Start Game
+          </button>
+        </>
+      )}
+
+      {started && (
+        <>
+          {ScoreLives}
+          {TimerDisplay}
           {gameOver ? (
             <>
               <h2 className='game-over'>Game Over!</h2>
@@ -108,17 +131,7 @@ const Game = () => {
               <h2>
                 Which one is the: <span className='breed'>{correctBreed}</span>?
               </h2>
-              <div className='dog-grid'>
-                {dogImages.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={img}
-                    alt='dog'
-                    className='dog-image'
-                    onClick={() => handleGuess(img)}
-                  />
-                ))}
-              </div>
+              {DogGrid}
             </>
           )}
         </>
@@ -127,4 +140,4 @@ const Game = () => {
   )
 }
 
-export default Game
+export default GuessTheDog

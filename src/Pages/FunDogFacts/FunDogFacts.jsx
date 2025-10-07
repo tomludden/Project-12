@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import './FunDogFacts.css'
-import { useDogFact } from '../../Hooks/useDogFact'
-import { useDogImage } from '../../Hooks/useDogImage'
+import { DogFact } from '../../components/DogFact'
+import { DogImage } from '../../components/DogImage'
 
 const FunDogFacts = () => {
-  const { fact, loading, fetchFact } = useDogFact()
-  const { dogImage, fetchDogImage, setDogImage } = useDogImage()
+  const { fact, loading, fetchFact } = DogFact()
+  const { dogImage, fetchDogImage, setDogImage } = DogImage()
   const [searchParams, setSearchParams] = useSearchParams()
   const showDetails = searchParams.get('showDetails') === 'true'
 

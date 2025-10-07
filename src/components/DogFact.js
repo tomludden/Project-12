@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export function useDogFact() {
+export function DogFact() {
   const [fact, setFact] = useState('')
   const [loading, setLoading] = useState(true)
 

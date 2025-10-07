@@ -1,4 +1,5 @@
 import './App.css'
+import React from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Header from './components/Header/Header.jsx'
 import Home from './Pages/Home/Home.jsx'
