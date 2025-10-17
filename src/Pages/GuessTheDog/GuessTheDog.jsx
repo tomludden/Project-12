@@ -1,18 +1,60 @@
-import React, { useEffect, useReducer, useCallback, useMemo } from 'react'
+import React, {
+  useEffect,
+  useReducer,
+  useCallback,
+  useMemo,
+  useState,
+  useRef
+} from 'react'
 import './GuessTheDog.css'
-import { DogImages } from '../../components/DogImages.js'
-import { GameTimer } from '../../components/GameTimer.js'
 import { gameReducer, initialState } from '../../Reducers/gameReducer.jsx'
 
 const STORAGE_KEY = 'guessTheDogProgress'
+
+const getBreedFromUrl = (url) => {
+  const match = url.match(/breeds\/([^/]+)\//)
+  return match ? match[1].replace('-', ' ') : 'Unknown'
+}
 
 const GuessTheDog = () => {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { dogImages, correctBreed, score, lives, gameOver, timer, started } =
     state
+  const [loading, setLoading] = useState(false)
+  const timerRef = useRef(null)
 
-  const fetchDogs = DogImages(dispatch)
-  GameTimer({ started, gameOver, timer, dispatch, fetchDogs })
+  const fetchDogs = useCallback(async () => {
+    setLoading(true)
+    const newImages = []
+
+    try {
+      while (newImages.length < 3) {
+        const res = await fetch('https://dog.ceo/api/breeds/image/random')
+        const data = await res.json()
+        const breed = getBreedFromUrl(data.message)
+
+        if (!newImages.some((img) => getBreedFromUrl(img) === breed)) {
+          newImages.push(data.message)
+        }
+      }
+
+      const correctIndex = Math.floor(Math.random() * 3)
+      const correct = getBreedFromUrl(newImages[correctIndex])
+
+      dispatch({
+        type: 'SET_DOGS',
+        payload: { images: newImages, correctBreed: correct }
+      })
+    } catch (err) {
+      console.error('Error fetching dog images:', err)
+      dispatch({
+        type: 'SET_DOGS',
+        payload: { images: [], correctBreed: '' }
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [dispatch])
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -37,8 +79,7 @@ const GuessTheDog = () => {
   const handleGuess = useCallback(
     (imgUrl) => {
       if (gameOver) return
-      const breed =
-        imgUrl.match(/breeds\/([^/]+)\//)?.[1]?.replace('-', ' ') ?? ''
+      const breed = getBreedFromUrl(imgUrl)
       if (breed === correctBreed) {
         dispatch({ type: 'GUESS_CORRECT' })
         fetchDogs()
@@ -55,6 +96,26 @@ const GuessTheDog = () => {
     dispatch({ type: 'RESET_GAME' })
     localStorage.removeItem(STORAGE_KEY)
   }, [])
+
+  // ⏱ Timer logic (merged from GameTimer)
+  useEffect(() => {
+    if (!started || gameOver) return
+
+    if (timerRef.current) clearInterval(timerRef.current)
+
+    timerRef.current = setInterval(() => {
+      dispatch({ type: 'TICK' })
+    }, 1000)
+
+    return () => clearInterval(timerRef.current)
+  }, [started, gameOver, dispatch])
+
+  useEffect(() => {
+    if (timer <= 0 && started && !gameOver) {
+      dispatch({ type: 'GUESS_WRONG' })
+      fetchDogs()
+    }
+  }, [timer, started, gameOver, dispatch, fetchDogs])
 
   const ScoreLives = useMemo(
     () => (
@@ -74,10 +135,9 @@ const GuessTheDog = () => {
   const TimerDisplay = useMemo(
     () =>
       !gameOver && (
-        <p className='timer'>
-          ⏳ <span className='time'>Time left: </span>
-          {timer}s
-        </p>
+        <div className='game-timer'>
+          <p>Time Remaining: {timer}s</p>
+        </div>
       ),
     [gameOver, timer]
   )
@@ -85,18 +145,22 @@ const GuessTheDog = () => {
   const DogGrid = useMemo(
     () => (
       <div className='dog-grid'>
-        {dogImages.map((img, idx) => (
-          <img
-            key={idx}
-            src={img}
-            alt='dog'
-            className='dog-image'
-            onClick={() => handleGuess(img)}
-          />
-        ))}
+        {loading ? (
+          <p>Loading dog images...</p>
+        ) : (
+          dogImages.map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt={`Dog ${idx + 1}`}
+              className='dog-image'
+              onClick={() => handleGuess(img)}
+            />
+          ))
+        )}
       </div>
     ),
-    [dogImages, handleGuess]
+    [dogImages, handleGuess, loading]
   )
 
   return (
