@@ -9,19 +9,22 @@ const FunDogFacts = () => {
   const [image, setImage] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const API_BASE = 'https://dog-facts-api.onrender.com'
+  const API_BASE =
+    import.meta.env.MODE === 'development'
+      ? 'http://localhost:3001'
+      : 'https://dog-facts-api.onrender.com'
 
   const fetchFactAndImage = useCallback(async () => {
     setLoading(true)
     try {
       const [factRes, imageRes] = await Promise.all([
         fetch(`${API_BASE}/api/dog-fact`),
-        fetch(`${API_BASE}/api/dog-image`)
+        fetch('https://dog.ceo/api/breeds/image/random')
       ])
       const factData = await factRes.json()
       const imageData = await imageRes.json()
       setFact(factData.fact || 'No fact found.')
-      setImage(imageData.image || '')
+      setImage(imageData.message || '')
     } catch (error) {
       console.error('Error fetching data:', error)
       setFact('Could not fetch dog fact right now.')
@@ -29,12 +32,12 @@ const FunDogFacts = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [API_BASE])
 
   const fetchFactOnly = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('${API_BASE}/api/dog-fact')
+      const res = await fetch(`${API_BASE}/api/dog-fact`)
       const data = await res.json()
       setFact(data.fact || 'No fact found.')
     } catch (error) {
@@ -43,7 +46,7 @@ const FunDogFacts = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [API_BASE])
 
   const fetchRandomImage = useCallback(async () => {
     try {
