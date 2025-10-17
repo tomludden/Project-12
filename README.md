@@ -20,7 +20,7 @@ A simple fun game where users guess the correct breed of a dog from three random
 - [React](https://reactjs.org/)
 - [React Router](https://reactrouter.com/)
 - [Dog CEO API](https://dog.ceo/dog-api/)
-- [Dog Facts API](https://dogapi.dog/)
+- [Dog Facts API](https://dog-facts-api.onrender.com/)
 
 # Installation
 
