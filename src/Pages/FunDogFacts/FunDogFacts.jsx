@@ -1,6 +1,6 @@
+import './FunDogFacts.css'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import './FunDogFacts.css'
 
 const FunDogFacts = () => {
   const [searchParams, setSearchParams] = useSearchParams()

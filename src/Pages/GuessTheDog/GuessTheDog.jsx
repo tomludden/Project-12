@@ -1,3 +1,4 @@
+import './GuessTheDog.css'
 import React, {
   useEffect,
   useReducer,
@@ -6,7 +7,6 @@ import React, {
   useState,
   useRef
 } from 'react'
-import './GuessTheDog.css'
 import { gameReducer, initialState } from '../../Reducers/gameReducer.jsx'
 import { useLocalStorage } from '../../hooks/useLocalStorage.js'
 
