@@ -8,6 +8,7 @@ import React, {
 } from 'react'
 import './GuessTheDog.css'
 import { gameReducer, initialState } from '../../Reducers/gameReducer.jsx'
+import { useLocalStorage } from '../../hooks/useLocalStorage.js'
 
 const STORAGE_KEY = 'guessTheDogProgress'
 
@@ -18,6 +19,7 @@ const getBreedFromUrl = (url) => {
 
 const GuessTheDog = () => {
   const [state, dispatch] = useReducer(gameReducer, initialState)
+  const [savedState, setSavedState] = useLocalStorage(STORAGE_KEY, initialState)
   const { dogImages, correctBreed, score, lives, gameOver, timer, started } =
     state
   const [loading, setLoading] = useState(false)
@@ -26,21 +28,17 @@ const GuessTheDog = () => {
   const fetchDogs = useCallback(async () => {
     setLoading(true)
     const newImages = []
-
     try {
       while (newImages.length < 3) {
         const res = await fetch('https://dog.ceo/api/breeds/image/random')
         const data = await res.json()
         const breed = getBreedFromUrl(data.message)
-
         if (!newImages.some((img) => getBreedFromUrl(img) === breed)) {
           newImages.push(data.message)
         }
       }
-
       const correctIndex = Math.floor(Math.random() * 3)
       const correct = getBreedFromUrl(newImages[correctIndex])
-
       dispatch({
         type: 'SET_DOGS',
         payload: { images: newImages, correctBreed: correct }
@@ -57,20 +55,14 @@ const GuessTheDog = () => {
   }, [dispatch])
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        dispatch({ type: 'LOAD_STATE', payload: parsed })
-      } catch {
-        localStorage.removeItem(STORAGE_KEY)
-      }
+    if (savedState && savedState.started) {
+      dispatch({ type: 'LOAD_STATE', payload: savedState })
     }
   }, [])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  }, [state])
+    setSavedState(state)
+  }, [state, setSavedState])
 
   useEffect(() => {
     if (started && !gameOver) fetchDogs()
@@ -97,16 +89,12 @@ const GuessTheDog = () => {
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
-  // ⏱ Timer logic (merged from GameTimer)
   useEffect(() => {
     if (!started || gameOver) return
-
     if (timerRef.current) clearInterval(timerRef.current)
-
     timerRef.current = setInterval(() => {
       dispatch({ type: 'TICK' })
     }, 1000)
-
     return () => clearInterval(timerRef.current)
   }, [started, gameOver, dispatch])
 
@@ -124,7 +112,7 @@ const GuessTheDog = () => {
           Score: <span className='score-num'>{score}</span>
         </p>
         <p className='lives'>
-          <span className='heart'>♡</span> <span className='live'>Lives: </span>{' '}
+          <span className='heart'>♡</span> <span className='live'>Lives:</span>{' '}
           {lives}
         </p>
       </div>

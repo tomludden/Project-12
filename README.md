@@ -34,4 +34,4 @@ npm run dev
   https://dog.ceo/api/breeds/image/random
 
 - **Dog Facts API:**  
-  https://dogapi.dog/api/v2/facts
+  https://dog-facts-api.onrender.com/

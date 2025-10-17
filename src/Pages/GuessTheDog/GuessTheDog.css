@@ -53,7 +53,7 @@ h1 {
   margin-top: 35px;
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 25px;
   flex-wrap: wrap;
   padding: 10px;
 }
@@ -152,6 +152,10 @@ h1 {
     margin-top: 10px;
   }
 
+  .dog-image {
+    width: 150px;
+    height: 150px;
+  }
   .game h1 {
     font-size: 1.25rem;
     margin-top: 20px;

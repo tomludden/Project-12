@@ -5,6 +5,7 @@ import './FunDogFacts.css'
 const FunDogFacts = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const showDetails = searchParams.get('showDetails') === 'true'
+
   const [fact, setFact] = useState('')
   const [image, setImage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -73,8 +74,10 @@ const FunDogFacts = () => {
   return (
     <div className='dog-fact-container'>
       <h2>Did you know?</h2>
+
       <div className='dog-fact'>
         {loading ? <p>Loading dog fact...</p> : <p>{fact}</p>}
+
         <div className='button-group'>
           <button onClick={fetchFactOnly} className='new-fact-btn'>
             New Fact
@@ -84,6 +87,7 @@ const FunDogFacts = () => {
           </button>
         </div>
       </div>
+
       {showDetails && (
         <div className='popup'>
           <div className='popup-content'>
@@ -91,14 +95,8 @@ const FunDogFacts = () => {
               &times;
             </span>
             <h3>Fun Dog Fact</h3>
-            {loading ? (
-              <p>Loading...</p>
-            ) : (
-              <>
-                <p>{fact}</p>
-                {image && <img src={image} alt='Dog' className='popup-img' />}
-              </>
-            )}
+            <p>{fact}</p>
+            {image && <img src={image} alt='Dog' className='popup-img' />}
           </div>
         </div>
       )}
