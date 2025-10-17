@@ -10,7 +10,7 @@ import React, {
 import { gameReducer, initialState } from '../../Reducers/gameReducer.jsx'
 import { useLocalStorage } from '../../hooks/useLocalStorage.js'
 
-const STORAGE_KEY = 'guessTheDogProgress'
+const STORAGE_KEY = 'dogGameState'
 
 const getBreedFromUrl = (url) => {
   const match = url.match(/breeds\/([^/]+)\//)
